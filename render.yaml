@@ -2,6 +2,7 @@ services:
   - type: web
     name: insanka-api
     env: python
+    plan: free
     buildCommand: "./build.sh"
     startCommand: "./start.sh"
     envVars:
