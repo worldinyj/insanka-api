@@ -22,6 +22,9 @@ app.include_router(votes.router, prefix="/api/v1")
 app.include_router(users.router, prefix="/api/v1")
 app.include_router(pages.router)
 
+from fastapi.responses import RedirectResponse
+
 @app.get("/")
 async def root():
-    return {"message": "Welcome to Insanka API"}
+    # 접속 시 JSON이 아닌 실제 웹 화면(로그인 페이지)으로 리다이렉트
+    return RedirectResponse(url="/login")
