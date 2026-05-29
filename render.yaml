@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: insanka-api
+    name: insanka
     env: python
     plan: free
     buildCommand: "./build.sh"
