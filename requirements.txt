@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+sqlalchemy
+alembic
+passlib[bcrypt]
+python-jose[cryptography]
+pillow
+bleach
+fastapi-mail
+slowapi
+apscheduler
+python-magic
+pydantic-settings
+asyncpg
+python-multipart
+aiosqlite
+greenlet

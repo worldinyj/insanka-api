@@ -1,0 +1,53 @@
+<div class="bg-bg-raised p-6 rounded-lg border border-border" x-data="{
+    voteId: 1, // Mocked ID
+    title: '다음 종목으로 가장 유력한 것은?',
+    options: [
+        {id: 1, text: '삼성전자', count: 42, percentage: 42},
+        {id: 2, text: 'SK하이닉스', count: 35, percentage: 35},
+        {id: 3, text: '에코프로', count: 23, percentage: 23}
+    ],
+    selectedOption: null,
+    hasVoted: false,
+    async castVote() {
+        if(!this.selectedOption) return;
+        try {
+            // Mock API Call
+            // await fetch(`/api/v1/votes/${this.voteId}/cast`, { ... });
+            this.hasVoted = true;
+            alert('투표가 완료되었습니다.');
+        } catch(e) {
+            alert('투표 중 오류가 발생했습니다.');
+        }
+    }
+}">
+    <h3 class="text-lg font-bold text-text-primary mb-4 border-b border-border pb-2" x-text="title"></h3>
+    
+    <div class="space-y-4">
+        <template x-for="opt in options" :key="opt.id">
+            <div>
+                <!-- Before Vote -->
+                <label x-show="!hasVoted" class="flex items-center space-x-3 p-3 rounded-md border border-border hover:border-accent cursor-pointer transition">
+                    <input type="radio" :value="opt.id" x-model="selectedOption" class="text-accent bg-bg-base border-border focus:ring-accent">
+                    <span class="text-text-primary" x-text="opt.text"></span>
+                </label>
+                
+                <!-- After Vote (Results) -->
+                <div x-show="hasVoted" class="relative bg-bg-base border border-border rounded-md overflow-hidden p-3">
+                    <!-- Progress Bar Background -->
+                    <div class="absolute inset-0 bg-accent-dim h-full" :style="`width: ${opt.percentage}%`"></div>
+                    <!-- Content -->
+                    <div class="relative flex justify-between text-sm">
+                        <span class="text-text-primary font-medium" x-text="opt.text"></span>
+                        <span class="text-text-secondary"><span x-text="opt.percentage"></span>% (<span x-text="opt.count"></span>표)</span>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <div class="mt-6 flex justify-end" x-show="!hasVoted">
+        <button type="button" @click="castVote()" :disabled="!selectedOption" :class="selectedOption ? 'bg-accent text-bg-base' : 'bg-bg-base text-text-muted border border-border cursor-not-allowed'" class="px-6 py-2 rounded-md font-medium transition">
+            투표하기
+        </button>
+    </div>
+</div>

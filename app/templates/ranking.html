@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}랭킹 - 인산가{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl w-full" x-data="{
+    ranking: [],
+    async loadRanking() {
+        const res = await fetch('/api/v1/users/ranking');
+        const data = await res.json();
+        this.ranking = data.ranking;
+    }
+}" x-init="loadRanking()">
+
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-text-primary">명예의 전당 🏆</h1>
+            <p class="text-text-secondary mt-2">인산가 커뮤니티 활동 랭킹입니다.</p>
+        </div>
+    </div>
+
+    <div class="bg-bg-surface border border-border rounded-xl shadow-lg overflow-hidden">
+        <ul class="divide-y divide-border">
+            <template x-for="(user, index) in ranking" :key="user.id">
+                <li class="flex items-center px-6 py-4 hover:bg-bg-raised transition" :class="index < 3 ? 'bg-accent-dim bg-opacity-5' : ''">
+                    <!-- Rank -->
+                    <div class="w-12 text-center font-bold text-xl" 
+                         :class="index === 0 ? 'text-warning' : index === 1 ? 'text-text-primary' : index === 2 ? 'text-[#cd7f32]' : 'text-text-muted'">
+                        <span x-show="index === 0">🥇</span>
+                        <span x-show="index === 1">🥈</span>
+                        <span x-show="index === 2">🥉</span>
+                        <span x-show="index > 2" x-text="index + 1"></span>
+                    </div>
+
+                    <!-- User Info -->
+                    <div class="flex-1 ml-4">
+                        <div class="text-text-primary font-bold text-lg">
+                            <span x-text="user.username"></span>
+                            <span class="text-xs ml-2 px-2 py-1 bg-bg-base border border-border rounded text-text-secondary">Lv <span x-text="user.level"></span></span>
+                        </div>
+                    </div>
+
+                    <!-- Points -->
+                    <div class="text-right">
+                        <div class="text-accent font-bold text-lg"><span x-text="user.total_points"></span> pts</div>
+                    </div>
+                </li>
+            </template>
+        </ul>
+    </div>
+</div>
+{% endblock %}

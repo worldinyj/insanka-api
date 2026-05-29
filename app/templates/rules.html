@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}커뮤니티 회칙 - 인산가{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl w-full bg-bg-surface border border-border p-8 rounded-xl shadow-lg">
+    <h1 class="text-2xl font-bold mb-6 border-b border-border pb-4">커뮤니티 회칙</h1>
+    
+    <div class="space-y-6 text-text-primary leading-relaxed">
+        <section>
+            <h2 class="text-xl font-semibold mb-3 text-accent">1. 기본 원칙</h2>
+            <ol class="list-decimal pl-5 space-y-2 text-text-secondary">
+                <li>본 커뮤니티는 인산가 주주들의 정보 공유와 집단 지성 발휘를 목적으로 합니다.</li>
+                <li>모든 멤버는 실제 인산가 주주임을 증명하고 승인받은 사람에 한합니다.</li>
+                <li>초대장은 직접 알고 있는 인산가 주주에게만 발송합니다.</li>
+                <li>커뮤니티 내 모든 정보는 외부에 무단으로 공유하지 않습니다.</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2 class="text-xl font-semibold mb-3 text-danger">2. 금지 행위</h2>
+            <p class="text-sm text-text-secondary mb-2">다음 행위 적발 시 즉시 강퇴 또는 영구 정지됩니다.</p>
+            <ul class="list-disc pl-5 space-y-2 text-text-secondary">
+                <li><strong class="text-text-primary">종교/정치 발언</strong>: 옹호·비판 일체 금지</li>
+                <li><strong class="text-text-primary">욕설·혐오 표현</strong>: 개인 또는 집단을 향한 차별적 언어</li>
+                <li><strong class="text-text-primary">광고·스팸 및 타 종목 추천</strong></li>
+                <li><strong class="text-text-primary">리딩 행위</strong>: 매수·매도 신호 제공 또는 특정 행동 유도</li>
+                <li><strong class="text-text-primary">내부 정보 외부 유출</strong></li>
+            </ul>
+        </section>
+        
+        <div class="mt-8 pt-6 border-t border-border flex justify-end">
+            <a href="javascript:history.back()" class="px-4 py-2 bg-bg-raised hover:bg-border rounded-md text-sm">뒤로 가기</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

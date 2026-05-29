@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}로그인 - 인산가{% endblock %}
+
+{% block content %}
+<div class="max-w-md w-full bg-bg-surface border border-border p-8 rounded-xl shadow-lg mt-12">
+    <div class="text-center mb-8">
+        <h1 class="text-3xl font-bold text-text-primary">환영합니다</h1>
+        <h1 class="text-3xl font-bold text-center text-text-primary mb-8">로그인</h1>
+    </div>
+
+    <form action="/api/v1/auth/login" method="POST" class="space-y-6" x-data="{ submitting: false }" @submit="submitting = true">
+        <div>
+            <label class="block text-sm font-medium text-text-secondary mb-1">이메일</label>
+            <input type="email" name="username" required placeholder="가입하신 이메일 주소" class="w-full px-4 py-2 bg-bg-base border border-border rounded-md focus:border-accent focus:outline-none transition text-text-primary">
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-text-secondary mb-1">비밀번호</label>
+            <input type="password" name="password" required placeholder="비밀번호" class="w-full px-4 py-2 bg-bg-base border border-border rounded-md focus:border-accent focus:outline-none transition text-text-primary">
+        </div>
+
+        <div class="flex items-center justify-between text-sm">
+            <div class="flex items-center">
+                <input id="remember-me" type="checkbox" class="h-4 w-4 text-accent border-border rounded bg-bg-base focus:ring-accent">
+                <label for="remember-me" class="ml-2 block text-text-secondary">로그인 유지</label>
+            </div>
+        </div>
+
+        <button type="submit" :disabled="submitting" class="w-full py-3 bg-accent text-bg-base font-bold rounded-md hover:bg-opacity-90 transition disabled:opacity-50" x-text="submitting ? '로그인 중...' : '로그인'"></button>
+
+        <div class="text-center mt-6">
+            <a href="#" aria-disabled="true" tabindex="-1" style="pointer-events: none; opacity: 0.5;" class="font-medium text-info hover:underline">비밀번호 찾기 (준비중)</a>
+        </div>
+    </form>
+
+    <div class="mt-8 pt-6 border-t border-border text-center text-sm text-text-secondary">
+        <p>계정이 없으신가요?</p>
+        <p class="mt-1">인산가 커뮤니티는 <span class="text-text-primary font-medium">초대제</span>로 운영됩니다.<br>기존 회원의 초대를 받아 가입할 수 있습니다.</p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,76 @@
+from fastapi import APIRouter, Request, Depends, HTTPException
+from fastapi.templating import Jinja2Templates
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.database import get_db
+from app.models.invitation import Invitation
+import os
+
+router = APIRouter(tags=["pages"])
+
+# Templates directory setup
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+
+@router.get("/login")
+async def login_page(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@router.get("/rules")
+async def rules_page(request: Request):
+    return templates.TemplateResponse("rules.html", {"request": request})
+
+@router.get("/invite/{token}")
+async def invite_page(request: Request, token: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Invitation).where(Invitation.token == token))
+    invitation = result.scalar_one_or_none()
+    
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Invalid token")
+        
+    # Mock inviter name
+    inviter_name = "인산가 관리자"
+    
+    return templates.TemplateResponse("invite.html", {
+        "request": request, 
+        "token": token,
+        "email": invitation.email,
+        "inviter": inviter_name
+    })
+
+@router.get("/signup")
+async def signup_page(request: Request, token: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Invitation).where(Invitation.token == token))
+    invitation = result.scalar_one_or_none()
+    
+    if not invitation:
+        raise HTTPException(status_code=404, detail="Invalid token")
+        
+    return templates.TemplateResponse("signup.html", {
+        "request": request,
+        "token": token,
+        "email": invitation.email
+    })
+
+@router.get("/room/{slug}")
+async def room_page(request: Request, slug: str):
+    # In reality, fetch room info and initial posts here
+    return templates.TemplateResponse("room.html", {"request": request, "slug": slug})
+
+@router.get("/post/{post_id}")
+async def post_page(request: Request, post_id: int):
+    # Fetch post data and comments
+    return templates.TemplateResponse("post.html", {"request": request, "post_id": post_id})
+
+@router.get("/room/{slug}/write")
+async def post_form_page(request: Request, slug: str):
+    return templates.TemplateResponse("post_form.html", {"request": request, "slug": slug})
+
+@router.get("/profile")
+async def profile_page(request: Request):
+    return templates.TemplateResponse("profile.html", {"request": request})
+
+@router.get("/ranking")
+async def ranking_page(request: Request):
+    return templates.TemplateResponse("ranking.html", {"request": request})
+

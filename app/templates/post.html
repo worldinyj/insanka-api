@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}게시글 - 인산가{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl w-full bg-bg-surface border border-border rounded-xl shadow-lg p-8" x-data="{
+    postId: {{ post_id }},
+    post: null,
+    comments: [],
+    newComment: '',
+    async loadPost() {
+        const res = await fetch(`/api/v1/posts/${this.postId}`);
+        const data = await res.json();
+        this.post = data;
+        this.comments = data.comments;
+    },
+    async toggleLike() {
+        await fetch(`/api/v1/posts/${this.postId}/like`, { method: 'POST' });
+        // MOCK: just alert for now
+        alert('좋아요 상태가 변경되었습니다.');
+    },
+    async submitComment() {
+        if(!this.newComment.trim()) return;
+        const res = await fetch(`/api/v1/posts/${this.postId}/comments`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ content: this.newComment })
+        });
+        if(res.ok) {
+            this.newComment = '';
+            await this.loadPost();
+        }
+    }
+}" x-init="loadPost()">
+
+    <template x-if="post">
+        <div>
+            <!-- Header -->
+            <div class="border-b border-border pb-4 mb-6">
+                <h1 class="text-3xl font-bold text-text-primary mb-2" x-text="post.title"></h1>
+                <div class="flex text-sm text-text-secondary space-x-4">
+                    <span>작성자: 익명</span>
+                    <span>조회: 0</span>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="prose prose-invert max-w-none text-text-primary mb-8 min-h-[200px]" x-text="post.content">
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-center mb-8 border-b border-border pb-8">
+                <button type="button" @click="toggleLike()" class="flex items-center space-x-2 px-6 py-2 rounded-full border border-border hover:bg-bg-raised hover:text-accent transition">
+                    <span>👍</span>
+                    <span class="font-medium">좋아요</span>
+                </button>
+            </div>
+
+            <!-- Comments Section -->
+            <div x-data="{ submitting: false }">
+                <h3 class="text-xl font-bold text-text-primary mb-4">댓글 (<span x-text="comments.length"></span>)</h3>
+                
+                <form @submit.prevent="async () => { 
+                    submitting = true; 
+                    await submitComment(); 
+                    submitting = false; 
+                }" class="mb-6 flex space-x-2">
+                    <input type="text" x-model="newComment" :disabled="submitting" placeholder="댓글을 입력하세요" class="flex-1 px-4 py-2 bg-bg-base border border-border rounded-md focus:border-accent focus:outline-none transition disabled:opacity-50">
+                    <button type="submit" :disabled="submitting" class="px-6 py-2 bg-accent text-bg-base font-semibold rounded-md hover:bg-opacity-90 transition disabled:opacity-50" x-text="submitting ? '등록 중...' : '등록'"></button>
+                </form>
+
+                <ul class="space-y-4">
+                    <template x-for="comment in comments" :key="comment.id">
+                        <li class="bg-bg-base p-4 rounded-lg border border-border">
+                            <div class="text-sm font-medium text-text-secondary mb-1">익명</div>
+                            <div class="text-text-primary" x-text="comment.content"></div>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+        </div>
+    </template>
+</div>
+{% endblock %}

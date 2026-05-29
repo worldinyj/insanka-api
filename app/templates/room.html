@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}게시판 - 인산가{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl w-full" x-data="{
+    slug: '{{ slug }}',
+    cursor: null,
+    posts: [],
+    loading: false,
+    hasMore: true,
+    async loadPosts() {
+        if (this.loading || !this.hasMore) return;
+        this.loading = true;
+        let url = `/api/v1/rooms/${this.slug}/posts`;
+        if (this.cursor) {
+            url += `?cursor=${this.cursor}`;
+        }
+        try {
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.posts.length > 0) {
+                this.posts.push(...data.posts);
+                this.cursor = data.posts[data.posts.length - 1].id;
+                if (data.posts.length < 20) {
+                    this.hasMore = false;
+                }
+            } else {
+                this.hasMore = false;
+            }
+        } catch (e) {
+            console.error('Failed to load posts', e);
+        } finally {
+            this.loading = false;
+        }
+    }
+}" x-init="loadPosts()">
+
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-text-primary">게시판 ({{ slug }})</h1>
+        <a :href="`/room/${slug}/write`" class="px-4 py-2 bg-accent text-bg-base font-semibold rounded-md hover:bg-opacity-90 transition shadow-sm">
+            글쓰기
+        </a>
+    </div>
+
+    <!-- Vote component area (Optional) -->
+    <div class="mb-6">
+        {% include 'components/vote.html' ignore missing %}
+    </div>
+
+    <div class="bg-bg-surface border border-border rounded-xl shadow-lg overflow-hidden">
+        <ul class="divide-y divide-border">
+            <template x-for="post in posts" :key="post.id">
+                <li>
+                    <a :href="`/post/${post.id}`" class="block p-4 hover:bg-bg-raised transition">
+                        <div class="flex justify-between items-center">
+                            <h2 class="text-lg font-medium text-text-primary" x-text="post.title"></h2>
+                            <span class="text-sm text-text-secondary" x-text="new Date(post.created_at).toLocaleDateString()"></span>
+                        </div>
+                    </a>
+                </li>
+            </template>
+            <template x-if="posts.length === 0 && !loading">
+                <li class="p-8 text-center text-text-secondary">아직 작성된 글이 없습니다.</li>
+            </template>
+        </ul>
+        
+        <!-- Infinite Scroll Trigger -->
+        <div x-intersect="loadPosts()" class="h-10 flex items-center justify-center">
+            <template x-if="loading">
+                <span class="text-text-muted text-sm">로딩 중...</span>
+            </template>
+        </div>
+    </div>
+</div>
+{% endblock %}

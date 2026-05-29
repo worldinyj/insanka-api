@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}초대장 확인 - 인산가{% endblock %}
+
+{% block content %}
+<div class="max-w-md w-full bg-bg-surface border border-border p-8 rounded-xl shadow-lg text-center mt-12">
+    <div class="w-16 h-16 bg-accent-dim rounded-full flex items-center justify-center mx-auto mb-4 text-accent text-3xl">
+        ✉️
+    </div>
+    <h1 class="text-2xl font-bold mb-2">인산가 주주 커뮤니티 초대</h1>
+    <p class="text-text-secondary mb-6">
+        <strong class="text-text-primary">{{ inviter }}</strong> 님께서 당신을 초대했습니다.<br>
+        수신 이메일: <span class="text-info">{{ email }}</span>
+    </p>
+
+    <div class="space-y-4">
+        <a href="/signup?token={{ token }}" class="block w-full py-3 bg-accent text-bg-base font-semibold rounded-md hover:bg-opacity-90 transition">
+            가입하기
+        </a>
+        <p class="text-xs text-text-muted">가입 시 주주 인증을 위한 보유 증빙이 필요합니다.</p>
+    </div>
+</div>
+{% endblock %}
