@@ -1,5 +1,5 @@
 from fastapi import UploadFile, HTTPException
-import magic
+import filetype
 from pathlib import Path
 
 MEDIA_CONFIG = {
@@ -22,7 +22,8 @@ async def validate_upload(file: UploadFile, config_type: str = "proof_image"):
         
     # 2. MIME 타입 검증
     header = await file.read(2048)
-    mime = magic.from_buffer(header, mime=True)
+    kind = filetype.guess(header)
+    mime = kind.mime if kind else "application/octet-stream"
     if mime not in config["allowed_mimes"]:
         raise HTTPException(status_code=400, detail="허용되지 않는 파일 형식입니다.")
     await file.seek(0)

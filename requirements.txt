@@ -9,7 +9,8 @@ bleach
 fastapi-mail
 slowapi
 apscheduler
-python-magic
+filetype
+python-dotenv
 pydantic-settings
 asyncpg
 python-multipart
