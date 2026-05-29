@@ -37,8 +37,8 @@
 }" x-init="loadPosts()">
 
     <div class="flex justify-between items-center mb-6">
-        <h1 class="text-2xl font-bold text-text-primary">게시판 ({{ slug }})</h1>
-        <a :href="`/room/${slug}/write`" class="px-4 py-2 bg-accent text-bg-base font-semibold rounded-md hover:bg-opacity-90 transition shadow-sm">
+        <h1 class="text-xl sm:text-2xl font-bold text-text-primary">게시판 ({{ slug }})</h1>
+        <a :href="`/room/${slug}/write`" class="px-4 py-2 bg-accent text-bg-base font-semibold rounded-md hover:bg-opacity-90 transition shadow-sm text-sm sm:text-base whitespace-nowrap ml-4">
             글쓰기
         </a>
     </div>
@@ -52,17 +52,17 @@
         <ul class="divide-y divide-border">
             <template x-for="post in posts" :key="post.id">
                 <li>
-                    <a :href="`/post/${post.id}`" class="block p-5 hover:bg-bg-raised transition">
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="flex items-center space-x-2 text-sm text-text-secondary">
-                                <span class="bg-accent bg-opacity-20 text-accent px-2 py-0.5 rounded-full text-xs font-bold" x-text="`Lv.${post.author.level}`"></span>
+                    <a :href="`/post/${post.id}`" class="block p-4 sm:p-5 hover:bg-bg-raised transition">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-2 gap-2 sm:gap-0">
+                            <div class="flex items-center space-x-2 text-xs sm:text-sm text-text-secondary">
+                                <span class="bg-accent bg-opacity-20 text-accent px-2 py-0.5 rounded-full font-bold" x-text="`Lv.${post.author.level}`"></span>
                                 <span class="font-medium text-text-primary" x-text="post.author.username"></span>
-                                <span>•</span>
-                                <span x-text="new Date(post.created_at).toLocaleDateString()"></span>
+                                <span class="hidden sm:inline">•</span>
+                                <span x-text="new Date(post.created_at).toLocaleDateString()" class="text-text-muted sm:text-text-secondary"></span>
                             </div>
                         </div>
-                        <h2 class="text-xl font-bold text-text-primary mb-2" x-text="post.title"></h2>
-                        <p class="text-text-secondary line-clamp-2 mb-4" x-text="post.content_preview"></p>
+                        <h2 class="text-lg sm:text-xl font-bold text-text-primary mb-2 leading-snug" x-text="post.title"></h2>
+                        <p class="text-sm sm:text-base text-text-secondary line-clamp-2 mb-4" x-text="post.content_preview"></p>
                         
                         <div class="flex items-center space-x-6 text-sm text-text-muted">
                             <div class="flex items-center space-x-1 hover:text-text-primary transition">

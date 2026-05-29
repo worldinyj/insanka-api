@@ -13,10 +13,26 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 @router.get("/pending-members")
 async def get_pending_members(db: AsyncSession = Depends(get_db), admin: User = Depends(require_admin)):
-    result = await db.execute(select(MembershipProof).where(MembershipProof.status == 'pending'))
-    proofs = result.scalars().all()
-    # Mocking response
-    return {"pending_count": len(proofs), "proofs": [{"id": p.id, "user_id": p.user_id} for p in proofs]}
+    result = await db.execute(
+        select(MembershipProof, User)
+        .join(User, MembershipProof.user_id == User.id)
+        .where(MembershipProof.status == 'pending')
+        .order_by(MembershipProof.created_at.desc())
+    )
+    rows = result.all()
+    
+    proofs_data = []
+    for p, u in rows:
+        proofs_data.append({
+            "id": p.id,
+            "user_id": u.id,
+            "username": u.username,
+            "email": u.email,
+            "image_url": p.image_url,
+            "created_at": p.created_at
+        })
+        
+    return {"pending_count": len(proofs_data), "proofs": proofs_data}
 
 @router.patch("/members/{user_id}/approve")
 async def approve_member(user_id: int, db: AsyncSession = Depends(get_db), admin: User = Depends(require_admin)):

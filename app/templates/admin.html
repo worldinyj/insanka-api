@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}관리자 대시보드 - 인산가{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl w-full" x-data="{
+    pendingMembers: [],
+    loading: false,
+    newInviteEmail: '',
+    inviteToken: null,
+    inviteError: null,
+    async loadPending() {
+        const res = await fetch('/api/v1/admin/pending-members');
+        if(res.ok) {
+            const data = await res.json();
+            this.pendingMembers = data.proofs;
+        } else {
+            if(res.status === 401 || res.status === 403) {
+                alert('관리자 권한이 없습니다.');
+                window.location.href = '/room/general';
+            }
+        }
+    },
+    async createInvite() {
+        if(!this.newInviteEmail) return;
+        this.loading = true;
+        this.inviteError = null;
+        this.inviteToken = null;
+        try {
+            const res = await fetch(`/api/v1/invitations/?email=${encodeURIComponent(this.newInviteEmail)}`, {
+                method: 'POST'
+            });
+            const data = await res.json();
+            if(res.ok) {
+                this.inviteToken = data.token;
+                this.newInviteEmail = '';
+            } else {
+                this.inviteError = data.detail || '초대 링크 발급 실패';
+            }
+        } finally {
+            this.loading = false;
+        }
+    },
+    async processMember(userId, action) {
+        if(!confirm(`정말 ${action === 'approve' ? '승인' : '거절'}하시겠습니까?`)) return;
+        
+        const url = `/api/v1/admin/members/${userId}/${action}`;
+        const options = { method: 'PATCH' };
+        
+        if(action === 'reject') {
+            options.headers = {'Content-Type': 'application/json'};
+            const reason = prompt('거절 사유를 입력하세요');
+            if(reason === null) return;
+            url += `?reason=${encodeURIComponent(reason)}`;
+        }
+        
+        const res = await fetch(url, options);
+        if(res.ok) {
+            alert('처리되었습니다.');
+            await this.loadPending();
+        } else {
+            alert('처리 중 오류가 발생했습니다.');
+        }
+    }
+}" x-init="loadPending()">
+
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-text-primary mb-2">관리자 대시보드 🛠️</h1>
+        <p class="text-text-secondary">회원 가입 승인 및 시스템 관리</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left Column: Pending Approvals -->
+        <div class="lg:col-span-2 space-y-6">
+            <h2 class="text-xl font-bold text-text-primary flex items-center space-x-2">
+                <span>가입 승인 대기자</span>
+                <span class="bg-warning text-bg-base text-xs px-2 py-1 rounded-full" x-text="pendingMembers.length"></span>
+            </h2>
+            
+            <div class="bg-bg-surface border border-border rounded-xl shadow-lg overflow-hidden">
+                <ul class="divide-y divide-border">
+                    <template x-for="member in pendingMembers" :key="member.id">
+                        <li class="p-6 hover:bg-bg-raised transition flex flex-col sm:flex-row gap-6">
+                            <!-- Image Proof -->
+                            <div class="w-full sm:w-48 h-32 bg-bg-base border border-border rounded-lg overflow-hidden shrink-0">
+                                <template x-if="member.image_url.startsWith('data:image')">
+                                    <img :src="member.image_url" class="w-full h-full object-cover cursor-pointer" @click="window.open(member.image_url, '_blank')" title="클릭해서 원본 보기">
+                                </template>
+                                <template x-if="!member.image_url.startsWith('data:image')">
+                                    <div class="w-full h-full flex items-center justify-center text-text-muted text-sm">이미지 없음</div>
+                                </template>
+                            </div>
+                            
+                            <!-- Info & Actions -->
+                            <div class="flex-1 flex flex-col justify-between">
+                                <div>
+                                    <h3 class="text-lg font-bold text-text-primary mb-1" x-text="member.username"></h3>
+                                    <div class="text-sm text-text-secondary mb-1" x-text="member.email"></div>
+                                    <div class="text-xs text-text-muted" x-text="`신청일: ${new Date(member.created_at).toLocaleString()}`"></div>
+                                </div>
+                                <div class="mt-4 flex space-x-3">
+                                    <button @click="processMember(member.user_id, 'approve')" class="px-4 py-2 bg-accent text-bg-base font-medium rounded hover:opacity-90 transition text-sm">
+                                        승인하기
+                                    </button>
+                                    <button @click="processMember(member.user_id, 'reject')" class="px-4 py-2 border border-danger text-danger font-medium rounded hover:bg-danger hover:bg-opacity-10 transition text-sm">
+                                        거절하기
+                                    </button>
+                                </div>
+                            </div>
+                        </li>
+                    </template>
+                    <template x-if="pendingMembers.length === 0">
+                        <li class="p-12 text-center text-text-secondary">현재 가입 대기 중인 회원이 없습니다.</li>
+                    </template>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Right Column: Generate Invite Link -->
+        <div class="space-y-6">
+            <h2 class="text-xl font-bold text-text-primary">초대장 발급</h2>
+            <div class="bg-bg-surface border border-border p-6 rounded-xl shadow-lg">
+                <form @submit.prevent="createInvite()" class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-text-secondary mb-1">받을 사람의 이메일</label>
+                        <input type="email" x-model="newInviteEmail" required placeholder="example@email.com" class="w-full px-4 py-2 bg-bg-base border border-border rounded focus:border-accent focus:outline-none text-text-primary text-sm">
+                    </div>
+                    <button type="submit" :disabled="loading" class="w-full py-2 bg-info text-bg-base font-medium rounded hover:opacity-90 transition disabled:opacity-50 text-sm">
+                        <span x-text="loading ? '발급 중...' : '새 초대장 링크 생성'"></span>
+                    </button>
+                </form>
+
+                <template x-if="inviteError">
+                    <div class="mt-4 p-3 bg-danger bg-opacity-20 border border-danger rounded text-danger text-sm" x-text="inviteError"></div>
+                </template>
+
+                <template x-if="inviteToken">
+                    <div class="mt-4 p-4 border border-accent bg-accent bg-opacity-10 rounded-lg">
+                        <div class="text-xs text-text-secondary mb-1">초대 링크가 발급되었습니다:</div>
+                        <div class="text-sm font-medium text-accent break-all select-all cursor-pointer" x-text="`${window.location.origin}/signup?token=${inviteToken}`"></div>
+                        <div class="mt-2 text-xs text-text-muted">위 링크를 복사해서 초대할 분에게 전달하세요.</div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

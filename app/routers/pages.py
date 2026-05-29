@@ -80,3 +80,7 @@ async def profile_page(request: Request):
 async def ranking_page(request: Request):
     return templates.TemplateResponse(request=request, name="ranking.html")
 
+@router.get("/admin")
+async def admin_page(request: Request):
+    return templates.TemplateResponse(request=request, name="admin.html")
+
