@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List
+from typing import List, Optional
 
 class Settings(BaseSettings):
     SECRET_KEY: str
@@ -9,8 +9,8 @@ class Settings(BaseSettings):
     
     DATABASE_URL: str
     
-    FRONTEND_URL: str
-    BACKEND_URL: str
+    FRONTEND_URL: Optional[str] = None
+    BACKEND_URL: Optional[str] = None
 
     @property
     def get_database_url(self) -> str:

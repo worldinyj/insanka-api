@@ -4,5 +4,4 @@ __pycache__/
 .env
 app.db
 .pytest_cache/
-alembic.ini
 .DS_Store
