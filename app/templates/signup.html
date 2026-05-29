@@ -3,10 +3,60 @@
 {% block title %}회원가입 - 인산가{% endblock %}
 
 {% block content %}
-<div class="max-w-lg w-full bg-bg-surface border border-border p-8 rounded-xl shadow-lg mt-8" x-data="{ agreed: false }">
+<div class="max-w-lg w-full bg-bg-surface border border-border p-8 rounded-xl shadow-lg mt-8" 
+     x-data="{ agreed: false, submitting: false, success: false, error: null, username: '', password: '', passwordConfirm: '', proofImage: null }">
     <p class="text-text-secondary text-sm mb-8">안전한 주주 확인을 위해 신분증과 주주명부가 포함된 증빙을 업로드해주세요.</p>
     
-    <form action="/api/v1/auth/invitations/{{ token }}/signup" method="POST" enctype="multipart/form-data" class="space-y-5" x-data="{ submitting: false }" @submit="submitting = true">
+    <form @submit.prevent="
+        if(!agreed) return;
+        submitting = true;
+        error = null;
+        if(password !== passwordConfirm) {
+            error = '비밀번호가 일치하지 않습니다.';
+            showToast(error, 'error');
+            submitting = false;
+            return;
+        }
+        if(!proofImage) {
+            error = '증빙 이미지를 업로드해주세요.';
+            showToast(error, 'error');
+            submitting = false;
+            return;
+        }
+        
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            const base64Image = e.target.result;
+            const payload = {
+                token: '{{ token }}',
+                username: username,
+                password: password,
+                proof_image_base64: base64Image
+            };
+            
+            try {
+                const res = await fetch('/api/v1/auth/signup', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    success = true;
+                    showToast('가입 신청이 완료되었습니다!', 'success');
+                } else {
+                    error = data.detail || '가입 신청 중 오류가 발생했습니다.';
+                    showToast(error, 'error');
+                }
+            } catch(err) {
+                error = '네트워크 오류가 발생했습니다.';
+                showToast(error, 'error');
+            } finally {
+                submitting = false;
+            }
+        };
+        reader.readAsDataURL(proofImage);
+    " class="space-y-5">
         <div>
             <label class="block text-sm font-medium text-text-secondary mb-1">이메일 (초대됨)</label>
             <input type="text" value="{{ email }}" disabled class="w-full px-4 py-2 bg-bg-base border border-border rounded-md text-text-muted cursor-not-allowed">
@@ -14,13 +64,17 @@
 
         <div>
             <label class="block text-sm font-medium text-text-secondary mb-1">닉네임</label>
-            <input type="text" name="username" required placeholder="활동할 닉네임 입력" class="w-full px-4 py-2 bg-bg-base border border-border rounded-md focus:border-accent focus:outline-none transition">
-            <!-- HTMX for duplicate check can be added here -->
+            <input type="text" x-model="username" required placeholder="활동할 닉네임 입력" class="w-full px-4 py-2 bg-bg-base border border-border rounded-md focus:border-accent focus:outline-none transition">
         </div>
 
         <div>
             <label class="block text-sm font-medium text-text-secondary mb-1">비밀번호</label>
-            <input type="password" name="password" required placeholder="8자 이상, 숫자+특수문자 포함" class="w-full px-4 py-2 bg-bg-base border border-border rounded-md focus:border-accent focus:outline-none transition">
+            <input type="password" x-model="password" required placeholder="8자 이상, 숫자+특수문자 포함" class="w-full px-4 py-2 bg-bg-base border border-border rounded-md focus:border-accent focus:outline-none transition">
+        </div>
+        
+        <div>
+            <label class="block text-sm font-medium text-text-secondary mb-1">비밀번호 확인</label>
+            <input type="password" x-model="passwordConfirm" required placeholder="비밀번호 재입력" class="w-full px-4 py-2 bg-bg-base border border-border rounded-md focus:border-accent focus:outline-none transition">
         </div>
 
         <div>
@@ -35,9 +89,10 @@
                     <div class="flex text-sm text-text-secondary">
                         <label for="file-upload" class="relative cursor-pointer rounded-md font-medium text-accent hover:text-info">
                             <span>파일 업로드</span>
-                            <input id="file-upload" name="proof_image" type="file" class="sr-only" required accept="image/jpeg,image/png">
+                            <input id="file-upload" type="file" @change="proofImage = $event.target.files[0]" class="sr-only" required accept="image/jpeg,image/png">
                         </label>
-                        <p class="pl-1">또는 드래그 앤 드롭</p>
+                        <p class="pl-1 text-text-muted" x-show="!proofImage">또는 클릭하세요</p>
+                        <p class="pl-1 text-accent font-bold" x-show="proofImage" x-text="'이미지 선택됨'"></p>
                     </div>
                     <p class="text-xs text-text-muted mt-1">※ 주민등록번호 뒷자리 등 민감 정보는 가리고 업로드해주세요.</p>
                 </div>
@@ -51,8 +106,19 @@
             </label>
         </div>
 
-            가입 신청하기
+        <button type="submit" :disabled="!agreed || submitting" class="w-full py-3 bg-accent text-bg-base font-bold rounded-md hover:bg-opacity-90 transition disabled:opacity-50" x-text="submitting ? '신청 중...' : '가입 신청하기'">
         </button>
     </form>
+
+    <template x-if="success">
+        <div class="fixed inset-0 bg-bg-base bg-opacity-90 flex items-center justify-center p-4 z-50">
+            <div class="bg-bg-surface border border-border p-8 rounded-xl max-w-sm w-full text-center shadow-2xl">
+                <div class="text-5xl mb-4">🎉</div>
+                <h2 class="text-2xl font-bold text-text-primary mb-2">신청 완료!</h2>
+                <p class="text-text-secondary mb-6">가입 신청이 성공적으로 접수되었습니다. 관리자 승인 후 로그인하실 수 있습니다.</p>
+                <a href="/login" class="inline-block w-full py-2 bg-accent text-bg-base font-bold rounded hover:bg-opacity-90 transition">로그인 화면으로 이동</a>
+            </div>
+        </div>
+    </template>
 </div>
 {% endblock %}

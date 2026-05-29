@@ -4,6 +4,34 @@ from app.config import settings
 
 app = FastAPI(title="Insanka API", version="1.0.0")
 
+@app.on_event("startup")
+async def startup_event():
+    from app.database import AsyncSessionLocal
+    from app.models.user import User
+    from app.utils.security import get_password_hash
+    from sqlalchemy import select
+    from datetime import datetime, timezone
+    
+    async with AsyncSessionLocal() as session:
+        result = await session.execute(select(User).where(User.email == "nsc.imp.atom@gmail.com"))
+        admin_user = result.scalar_one_or_none()
+        
+        if not admin_user:
+            hashed_pw = get_password_hash("admin12345!")
+            new_admin = User(
+                email="nsc.imp.atom@gmail.com",
+                username="총괄관리자",
+                hashed_password=hashed_pw,
+                role="admin",
+                status="approved",
+                level=5,
+                total_points=99999,
+                approved_at=datetime.now(timezone.utc)
+            )
+            session.add(new_admin)
+            await session.commit()
+
+
 # CORS middleware setup
 app.add_middleware(
     CORSMiddleware,

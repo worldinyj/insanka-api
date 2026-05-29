@@ -7,6 +7,15 @@
     postId: {{ post_id }},
     post: null,
     comments: [],
+    get commentTree() {
+        const roots = this.comments.filter(c => !c.parent_id);
+        roots.forEach(root => {
+            root.replies = this.comments.filter(c => c.parent_id === root.id);
+        });
+        return roots;
+    },
+    replyingTo: null,
+    replyContent: '',
     newComment: '',
     async loadPost() {
         const res = await fetch(`/api/v1/posts/${this.postId}`);
@@ -20,6 +29,8 @@
             const data = await res.json();
             if (data.status === 'liked') this.post.likes += 1;
             else this.post.likes -= 1;
+        } else {
+            showToast('오류가 발생했습니다.', 'error');
         }
     },
     async submitComment() {
@@ -32,6 +43,25 @@
         if(res.ok) {
             this.newComment = '';
             await this.loadPost();
+            showToast('댓글이 등록되었습니다.', 'success');
+        } else {
+            showToast('댓글 등록에 실패했습니다.', 'error');
+        }
+    },
+    async submitReply(parentId) {
+        if(!this.replyContent.trim()) return;
+        const res = await fetch(`/api/v1/posts/${this.postId}/comments`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ content: this.replyContent, parent_id: parentId })
+        });
+        if(res.ok) {
+            this.replyContent = '';
+            this.replyingTo = null;
+            await this.loadPost();
+            showToast('답글이 등록되었습니다.', 'success');
+        } else {
+            showToast('답글 등록에 실패했습니다.', 'error');
         }
     }
 }" x-init="loadPost()">
@@ -78,15 +108,47 @@
                 </form>
 
                 <ul class="space-y-4">
-                    <template x-for="comment in comments" :key="comment.id">
+                    <template x-for="comment in commentTree" :key="comment.id">
                         <li class="bg-bg-raised p-4 rounded-lg border border-border">
+                            <!-- Root Comment -->
                             <div class="flex items-center space-x-2 text-sm text-text-secondary mb-2">
                                 <span class="bg-info bg-opacity-20 text-info px-1.5 py-0.5 rounded text-xs font-bold" x-text="`Lv.${comment.author.level}`"></span>
                                 <span class="font-medium text-text-primary" x-text="comment.author.username"></span>
                                 <span>•</span>
                                 <span class="text-xs" x-text="new Date(comment.created_at).toLocaleString()"></span>
                             </div>
-                            <div class="text-text-primary" x-text="comment.content"></div>
+                            <div class="text-text-primary mb-2" x-text="comment.content"></div>
+                            
+                            <!-- Reply Button -->
+                            <button @click="replyingTo = replyingTo === comment.id ? null : comment.id; replyContent = ''" class="text-xs text-text-secondary hover:text-text-primary transition flex items-center space-x-1">
+                                <span>↳ 답글 달기</span>
+                            </button>
+
+                            <!-- Reply Form -->
+                            <div x-show="replyingTo === comment.id" x-transition class="mt-3 ml-2 sm:ml-4 border-l-2 border-border pl-3 sm:pl-4">
+                                <form @submit.prevent="submitReply(comment.id)" class="flex flex-col sm:flex-row gap-2">
+                                    <input type="text" x-model="replyContent" placeholder="답글을 입력하세요" class="flex-1 px-3 py-1.5 bg-bg-base border border-border rounded-md focus:border-accent focus:outline-none transition text-sm">
+                                    <button type="submit" class="px-4 py-1.5 bg-bg-surface border border-border text-text-primary font-medium rounded-md hover:bg-bg-raised transition text-sm shrink-0">등록</button>
+                                </form>
+                            </div>
+
+                            <!-- Replies -->
+                            <template x-if="comment.replies && comment.replies.length > 0">
+                                <ul class="mt-4 ml-2 sm:ml-4 space-y-3 border-l-2 border-border pl-3 sm:pl-4">
+                                    <template x-for="reply in comment.replies" :key="reply.id">
+                                        <li class="bg-bg-base p-3 rounded-md border border-border">
+                                            <div class="flex items-center space-x-2 text-sm text-text-secondary mb-1">
+                                                <span class="bg-info bg-opacity-20 text-info px-1.5 py-0.5 rounded text-xs font-bold" x-text="`Lv.${reply.author.level}`"></span>
+                                                <span class="font-medium text-text-primary" x-text="reply.author.username"></span>
+                                                <span>•</span>
+                                                <span class="text-xs" x-text="new Date(reply.created_at).toLocaleString()"></span>
+                                            </div>
+                                            <div class="text-text-primary text-sm" x-text="reply.content"></div>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </template>
+
                         </li>
                     </template>
                 </ul>

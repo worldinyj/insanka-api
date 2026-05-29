@@ -19,14 +19,17 @@
                   body: formData
               }).then(async res => {
                   if (res.ok) {
-                      window.location.href = '/room/general';
+                      showToast('로그인 성공! 환영합니다.', 'success');
+                      setTimeout(() => { window.location.href = '/room/general'; }, 500);
                   } else {
                       const data = await res.json();
                       error = data.detail || '로그인에 실패했습니다.';
+                      showToast(error, 'error');
                       submitting = false;
                   }
               }).catch(() => {
                   error = '네트워크 오류가 발생했습니다.';
+                  showToast(error, 'error');
                   submitting = false;
               });
           ">

@@ -16,8 +16,8 @@
             this.pendingMembers = data.proofs;
         } else {
             if(res.status === 401 || res.status === 403) {
-                alert('관리자 권한이 없습니다.');
-                window.location.href = '/room/general';
+                showToast('관리자 권한이 없습니다.', 'error');
+                setTimeout(() => { window.location.href = '/room/general'; }, 1000);
             }
         }
     },
@@ -34,8 +34,10 @@
             if(res.ok) {
                 this.inviteToken = data.token;
                 this.newInviteEmail = '';
+                showToast('초대 링크가 정상적으로 발급되었습니다.', 'success');
             } else {
                 this.inviteError = data.detail || '초대 링크 발급 실패';
+                showToast(this.inviteError, 'error');
             }
         } finally {
             this.loading = false;
@@ -56,10 +58,10 @@
         
         const res = await fetch(url, options);
         if(res.ok) {
-            alert('처리되었습니다.');
+            showToast(`성공적으로 ${action === 'approve' ? '승인' : '거절'} 처리되었습니다.`, 'success');
             await this.loadPending();
         } else {
-            alert('처리 중 오류가 발생했습니다.');
+            showToast('처리 중 오류가 발생했습니다.', 'error');
         }
     }
 }" x-init="loadPending()">
