@@ -34,9 +34,12 @@ async def validate_upload(file: UploadFile, config_type: str = "proof_image"):
         raise HTTPException(status_code=400, detail="파일 크기를 초과했습니다.")
     await file.seek(0)
     
-    return content
+    return content, mime
 
 async def upload_proof_image(file: UploadFile) -> str:
-    # MOCK: 실제 환경에서는 Cloudinary 업로드 후 URL 반환
-    await validate_upload(file, "proof_image")
-    return f"https://mock.cloudinary.com/proofs/{file.filename}"
+    # Render 무료 환경의 휘발성 파일시스템 문제를 우회하기 위해 
+    # 증빙 이미지를 Base64 문자열로 변환하여 DB에 직접 저장합니다.
+    content, mime = await validate_upload(file, "proof_image")
+    import base64
+    b64 = base64.b64encode(content).decode('utf-8')
+    return f"data:{mime};base64,{b64}"

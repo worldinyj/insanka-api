@@ -41,12 +41,33 @@
 </head>
 <body class="antialiased min-h-screen flex flex-col">
     <!-- Topbar -->
-    <header class="h-16 sticky top-0 z-50 bg-bg-surface border-b border-border flex items-center px-6 justify-between">
-        <div class="text-accent font-bold text-xl">🔷 인산가</div>
+    <header class="h-16 sticky top-0 z-50 bg-bg-surface border-b border-border flex items-center px-6 justify-between"
+            x-data="{ user: null }"
+            x-init="
+                try {
+                    const res = await fetch('/api/v1/users/me');
+                    if (res.ok) user = await res.json();
+                } catch(e) {}
+            ">
+        <a href="/room/general" class="text-accent font-bold text-xl hover:opacity-80 transition">🔷 인산가</a>
+        
         <!-- Header Right -->
-        <div class="flex items-center space-x-6">
-            <button type="button" class="text-text-secondary hover:text-text-primary">🔔 알림</button>
-            <button type="button" class="text-text-secondary hover:text-text-primary">👤 프로필</button>
+        <div class="flex items-center space-x-6 text-sm">
+            <template x-if="user">
+                <div class="flex items-center space-x-4">
+                    <a href="/profile" class="text-text-secondary hover:text-text-primary transition flex items-center space-x-2">
+                        <span class="bg-accent bg-opacity-20 text-accent px-2 py-0.5 rounded-full text-xs font-bold" x-text="`Lv.${user.level}`"></span>
+                        <span x-text="`${user.username}님`"></span>
+                    </a>
+                    <a href="/ranking" class="text-text-secondary hover:text-text-primary transition">🏆 랭킹</a>
+                    <button @click="await fetch('/api/v1/auth/logout', {method:'POST'}); window.location.href='/login'" class="text-text-secondary hover:text-text-primary transition">로그아웃</button>
+                </div>
+            </template>
+            <template x-if="!user">
+                <div class="flex items-center space-x-4">
+                    <a href="/login" class="text-accent font-medium hover:underline transition">로그인</a>
+                </div>
+            </template>
         </div>
     </header>
 

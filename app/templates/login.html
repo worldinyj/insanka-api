@@ -9,7 +9,32 @@
         <h1 class="text-3xl font-bold text-center text-text-primary mb-8">로그인</h1>
     </div>
 
-    <form action="/api/v1/auth/login" method="POST" class="space-y-6" x-data="{ submitting: false }" @submit="submitting = true">
+    <form class="space-y-6" 
+          x-data="{ submitting: false, error: null }" 
+          @submit.prevent="
+              submitting = true; error = null;
+              const formData = new FormData($event.target);
+              fetch('/api/v1/auth/login', {
+                  method: 'POST',
+                  body: formData
+              }).then(async res => {
+                  if (res.ok) {
+                      window.location.href = '/room/general';
+                  } else {
+                      const data = await res.json();
+                      error = data.detail || '로그인에 실패했습니다.';
+                      submitting = false;
+                  }
+              }).catch(() => {
+                  error = '네트워크 오류가 발생했습니다.';
+                  submitting = false;
+              });
+          ">
+        
+        <template x-if="error">
+            <div class="p-3 bg-danger bg-opacity-20 border border-danger text-danger text-sm rounded-md" x-text="error"></div>
+        </template>
+
         <div>
             <label class="block text-sm font-medium text-text-secondary mb-1">이메일</label>
             <input type="email" name="username" required placeholder="가입하신 이메일 주소" class="w-full px-4 py-2 bg-bg-base border border-border rounded-md focus:border-accent focus:outline-none transition text-text-primary">

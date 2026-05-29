@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Response
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -7,14 +7,33 @@ from app.models.user import User
 from app.models.invitation import Invitation
 from app.models.membership_proof import MembershipProof
 from app.utils.media import upload_proof_image
+from app.utils.security import verify_password, get_password_hash, create_access_token
 from datetime import datetime, timezone
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/login")
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
-    # TODO: Implement login logic
-    return {"access_token": "fake-token", "token_type": "bearer"}
+async def login(response: Response, form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
+    user = (await db.execute(select(User).where(User.email == form_data.username))).scalar_one_or_none()
+    if not user or not verify_password(form_data.password, user.hashed_pw):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="이메일 또는 비밀번호가 올바르지 않습니다.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    access_token = create_access_token(data={"sub": str(user.id)})
+    
+    # HttpOnly 쿠키 설정
+    response.set_cookie(
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        samesite="lax",
+        secure=True,
+        max_age=3600 # 1 hour
+    )
+    return {"access_token": access_token, "token_type": "bearer"}
 
 @router.post("/invitations/{token}/signup")
 async def signup(
@@ -42,7 +61,7 @@ async def signup(
     new_user = User(
         email=invitation.email,
         username=username,
-        hashed_pw="mock-hashed-pw", # Mock password hashing for now
+        hashed_pw=get_password_hash(password),
         invited_by=invitation.inviter_id
     )
     db.add(new_user)
@@ -68,6 +87,6 @@ async def refresh_token():
     return {"message": "Refresh endpoint"}
 
 @router.post("/logout")
-async def logout():
-    # TODO: Implement logout
+async def logout(response: Response):
+    response.delete_cookie("access_token")
     return {"message": "Logged out"}

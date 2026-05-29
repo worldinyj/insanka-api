@@ -52,16 +52,33 @@
         <ul class="divide-y divide-border">
             <template x-for="post in posts" :key="post.id">
                 <li>
-                    <a :href="`/post/${post.id}`" class="block p-4 hover:bg-bg-raised transition">
-                        <div class="flex justify-between items-center">
-                            <h2 class="text-lg font-medium text-text-primary" x-text="post.title"></h2>
-                            <span class="text-sm text-text-secondary" x-text="new Date(post.created_at).toLocaleDateString()"></span>
+                    <a :href="`/post/${post.id}`" class="block p-5 hover:bg-bg-raised transition">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="flex items-center space-x-2 text-sm text-text-secondary">
+                                <span class="bg-accent bg-opacity-20 text-accent px-2 py-0.5 rounded-full text-xs font-bold" x-text="`Lv.${post.author.level}`"></span>
+                                <span class="font-medium text-text-primary" x-text="post.author.username"></span>
+                                <span>•</span>
+                                <span x-text="new Date(post.created_at).toLocaleDateString()"></span>
+                            </div>
+                        </div>
+                        <h2 class="text-xl font-bold text-text-primary mb-2" x-text="post.title"></h2>
+                        <p class="text-text-secondary line-clamp-2 mb-4" x-text="post.content_preview"></p>
+                        
+                        <div class="flex items-center space-x-6 text-sm text-text-muted">
+                            <div class="flex items-center space-x-1 hover:text-text-primary transition">
+                                <span>👍</span>
+                                <span x-text="post.likes"></span>
+                            </div>
+                            <div class="flex items-center space-x-1 hover:text-text-primary transition">
+                                <span>💬</span>
+                                <span x-text="post.comments"></span>
+                            </div>
                         </div>
                     </a>
                 </li>
             </template>
             <template x-if="posts.length === 0 && !loading">
-                <li class="p-8 text-center text-text-secondary">아직 작성된 글이 없습니다.</li>
+                <li class="p-12 text-center text-text-secondary">아직 작성된 글이 없습니다. 첫 글의 주인공이 되어보세요!</li>
             </template>
         </ul>
         

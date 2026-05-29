@@ -15,9 +15,12 @@
         this.comments = data.comments;
     },
     async toggleLike() {
-        await fetch(`/api/v1/posts/${this.postId}/like`, { method: 'POST' });
-        // MOCK: just alert for now
-        alert('좋아요 상태가 변경되었습니다.');
+        const res = await fetch(`/api/v1/posts/${this.postId}/like`, { method: 'POST' });
+        if (res.ok) {
+            const data = await res.json();
+            if (data.status === 'liked') this.post.likes += 1;
+            else this.post.likes -= 1;
+        }
     },
     async submitComment() {
         if(!this.newComment.trim()) return;
@@ -36,11 +39,13 @@
     <template x-if="post">
         <div>
             <!-- Header -->
-            <div class="border-b border-border pb-4 mb-6">
-                <h1 class="text-3xl font-bold text-text-primary mb-2" x-text="post.title"></h1>
-                <div class="flex text-sm text-text-secondary space-x-4">
-                    <span>작성자: 익명</span>
-                    <span>조회: 0</span>
+            <div class="border-b border-border pb-6 mb-6">
+                <h1 class="text-3xl font-bold text-text-primary mb-4" x-text="post.title"></h1>
+                <div class="flex items-center text-sm text-text-secondary space-x-3">
+                    <span class="bg-accent bg-opacity-20 text-accent px-2 py-0.5 rounded-full text-xs font-bold" x-text="`Lv.${post.author.level}`"></span>
+                    <span class="font-medium text-text-primary" x-text="post.author.username"></span>
+                    <span>•</span>
+                    <span x-text="new Date(post.created_at).toLocaleString()"></span>
                 </div>
             </div>
 
@@ -49,10 +54,13 @@
             </div>
 
             <!-- Actions -->
-            <div class="flex justify-center mb-8 border-b border-border pb-8">
-                <button type="button" @click="toggleLike()" class="flex items-center space-x-2 px-6 py-2 rounded-full border border-border hover:bg-bg-raised hover:text-accent transition">
+            <div class="flex items-center justify-between mb-8 border-b border-border pb-8">
+                <div class="flex space-x-4 text-text-muted">
+                    <span x-text="`💬 댓글 ${comments.length}개`"></span>
+                </div>
+                <button type="button" @click="toggleLike()" class="flex items-center space-x-2 px-6 py-2 rounded-full border border-border hover:bg-bg-raised transition" :class="{'text-accent border-accent': post.likes > 0, 'text-text-primary': post.likes === 0}">
                     <span>👍</span>
-                    <span class="font-medium">좋아요</span>
+                    <span class="font-medium" x-text="`좋아요 ${post.likes || ''}`"></span>
                 </button>
             </div>
 
@@ -71,8 +79,13 @@
 
                 <ul class="space-y-4">
                     <template x-for="comment in comments" :key="comment.id">
-                        <li class="bg-bg-base p-4 rounded-lg border border-border">
-                            <div class="text-sm font-medium text-text-secondary mb-1">익명</div>
+                        <li class="bg-bg-raised p-4 rounded-lg border border-border">
+                            <div class="flex items-center space-x-2 text-sm text-text-secondary mb-2">
+                                <span class="bg-info bg-opacity-20 text-info px-1.5 py-0.5 rounded text-xs font-bold" x-text="`Lv.${comment.author.level}`"></span>
+                                <span class="font-medium text-text-primary" x-text="comment.author.username"></span>
+                                <span>•</span>
+                                <span class="text-xs" x-text="new Date(comment.created_at).toLocaleString()"></span>
+                            </div>
                             <div class="text-text-primary" x-text="comment.content"></div>
                         </li>
                     </template>

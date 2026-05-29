@@ -8,6 +8,17 @@ from app.models.point_log import PointLog
 
 router = APIRouter(prefix="/users", tags=["users"])
 
+@router.get("/me")
+async def get_me(user: User = Depends(get_current_user)):
+    return {
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "level": user.level,
+        "total_points": user.total_points,
+        "role": user.role
+    }
+
 @router.get("/me/points")
 async def get_my_points(db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
     user_id = user.id
