@@ -37,8 +37,12 @@ async def get_my_points(db: AsyncSession = Depends(get_db), user: User = Depends
 
 @router.get("/ranking")
 async def get_ranking(db: AsyncSession = Depends(get_db)):
-    # In reality, this might use Redis for caching. Using simple DB order for now.
-    result = await db.execute(select(User).order_by(desc(User.total_points)).limit(50))
+    result = await db.execute(
+        select(User)
+        .where(User.role != 'admin', User.status == 'approved')
+        .order_by(desc(User.total_points))
+        .limit(50)
+    )
     users = result.scalars().all()
     
     return {
