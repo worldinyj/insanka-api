@@ -21,7 +21,7 @@ async def startup_event():
             new_admin = User(
                 email="nsc.imp.atom@gmail.com",
                 username="총괄관리자",
-                hashed_password=hashed_pw,
+                hashed_pw=hashed_pw,
                 role="admin",
                 status="approved",
                 level=5,
