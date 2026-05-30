@@ -7,35 +7,37 @@
     slug: '{{ slug }}',
     title: '',
     content: '',
+    submitting: false,
     async submitPost() {
         if(!this.title.trim() || !this.content.trim()) {
-            alert('제목과 내용을 모두 입력해주세요.');
+            showToast('제목과 내용을 모두 입력해주세요.', 'error');
             return;
         }
         
-        const res = await fetch(`/api/v1/rooms/${this.slug}/posts`, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ title: this.title, content: this.content })
-        });
-        
-        if (res.ok) {
-            const data = await res.json();
-            window.location.href = `/post/${data.id}`;
-        } else {
-            alert('게시글 작성에 실패했습니다.');
+        this.submitting = true;
+        try {
+            const res = await fetch(`/api/v1/rooms/${this.slug}/posts`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ title: this.title, content: this.content })
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                showToast('게시글이 등록되었습니다!', 'success');
+                setTimeout(() => { window.location.href = `/post/${data.id}`; }, 500);
+            } else {
+                showToast('게시글 작성에 실패했습니다.', 'error');
+            }
+        } finally {
+            this.submitting = false;
         }
     }
-}" x-data="{ submitting: false }">
+}">
 
     <h1 class="text-2xl font-bold mb-6 text-text-primary border-b border-border pb-4">게시글 작성</h1>
 
-    <form @submit.prevent="async () => { 
-        if(submitting) return;
-        submitting = true;
-        await submitPost();
-        submitting = false;
-    }" class="space-y-6">
+    <form @submit.prevent="submitPost()" class="space-y-6">
         <div>
             <label class="block text-sm font-medium text-text-secondary mb-1">제목</label>
             <input type="text" x-model="title" required placeholder="제목을 입력하세요" class="w-full px-4 py-2 bg-bg-base border border-border rounded-md focus:border-accent focus:outline-none transition">
@@ -43,14 +45,17 @@
 
         <div>
             <label class="block text-sm font-medium text-text-secondary mb-1">내용</label>
-            <textarea x-model="content" required rows="10" placeholder="내용을 입력하세요" class="w-full px-4 py-2 bg-bg-base border border-border rounded-md focus:border-accent focus:outline-none transition"></textarea>
-            <!-- In real implementation, WYSIWYG editor like Trix or Quill will replace this textarea -->
+            <textarea x-model="content" required rows="12" placeholder="내용을 입력하세요" class="w-full px-4 py-2 bg-bg-base border border-border rounded-md focus:border-accent focus:outline-none transition resize-none"></textarea>
         </div>
 
-        <div class="flex justify-end space-x-4 pt-4">
-            <a :href="`/room/${slug}`" class="px-6 py-2 border border-border text-text-primary rounded-md hover:bg-bg-raised transition">취소</a>
-            <button type="submit" :disabled="submitting" class="px-6 py-2 bg-accent text-bg-base font-semibold rounded-md hover:bg-opacity-90 transition disabled:opacity-50" x-text="submitting ? '등록 중...' : '등록'"></button>
+        <div class="flex justify-end gap-3 pt-4">
+            <a :href="`/room/${slug}`" class="px-6 py-2.5 border border-border text-text-primary rounded-md hover:bg-bg-raised transition text-sm font-medium text-center">취소</a>
+            <button type="submit" :disabled="submitting"
+                    class="px-6 py-2.5 bg-accent text-white font-medium text-sm rounded-md hover:bg-opacity-90 transition disabled:opacity-50 min-w-[80px]"
+                    x-text="submitting ? '등록 중...' : '등록'">
+            </button>
         </div>
     </form>
 </div>
 {% endblock %}
+
